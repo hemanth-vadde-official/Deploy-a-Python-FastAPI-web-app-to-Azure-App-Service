@@ -99,9 +99,7 @@ To deploy your FastAPI app to Azure App Service using Azure Pipelines, you'll ne
    
    ```bash
    uvicorn main:app --reload
-   ```
-
----
+------------
 
 ### **4. Create a Pipeline in Azure DevOps**
 
@@ -168,7 +166,6 @@ steps:
 ![image](https://github.com/user-attachments/assets/2ff43b85-75d6-43ee-a0d3-04093ce83229)
 
 ```
-
 ---
 
 ### **5. App Service Configuration**
@@ -183,8 +180,8 @@ steps:
      - **Value**: `gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 main:app`
    
    This tells Azure to use **Gunicorn** with **Uvicorn workers** to run your FastAPI app.
+![image](https://github.com/user-attachments/assets/618c8739-8f58-4e69-bc88-3fcc4686512d)
 
-   ![image](https://github.com/user-attachments/assets/32bca85f-122d-45c4-8935-2109250ba9e0)
 
 
 3. **Add Additional Settings**:
@@ -197,7 +194,7 @@ steps:
      - **Name**: `WEBSITE_HTTPLOGGING_RETENTION_DAYS`
      - **Value**: `30`
      - **Slot Setting**: `false`
-    ![image](https://github.com/user-attachments/assets/b6a483d2-2b9f-41a4-9186-20d70aa219bc)
+![image](https://github.com/user-attachments/assets/120be09a-afce-443c-b599-fd82df34717c)
 
 
 ---
@@ -215,7 +212,7 @@ steps:
    
    You should be able to see your FastAPI app responding to HTTP requests.
 
-![image](https://github.com/user-attachments/assets/d7f02dad-259f-48b6-8ed0-0f43d55dcc9d)
+![image](https://github.com/user-attachments/assets/99eaed29-69f7-4b8d-8b51-cd2295c67b24)
 
 
 ---
