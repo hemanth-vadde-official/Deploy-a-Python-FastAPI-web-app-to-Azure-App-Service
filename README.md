@@ -164,10 +164,6 @@ steps:
   displayName: 'Deploy to Azure App Service'
 
 ![image](https://github.com/user-attachments/assets/2ff43b85-75d6-43ee-a0d3-04093ce83229)
-
-```
----
-
 ### **5. App Service Configuration**
 
 1. **Startup Command**:
@@ -182,8 +178,6 @@ steps:
    This tells Azure to use **Gunicorn** with **Uvicorn workers** to run your FastAPI app.
 ![image](https://github.com/user-attachments/assets/618c8739-8f58-4e69-bc88-3fcc4686512d)
 
-
-
 3. **Add Additional Settings**:
    - In the **Application settings** section, add the following settings:
    
@@ -195,9 +189,6 @@ steps:
      - **Value**: `30`
      - **Slot Setting**: `false`
 ![image](https://github.com/user-attachments/assets/120be09a-afce-443c-b599-fd82df34717c)
-
-
----
 
 ### **6. Final Checks and Testing**
 
