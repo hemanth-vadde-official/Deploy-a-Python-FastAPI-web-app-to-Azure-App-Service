@@ -1,50 +1,80 @@
+pr: none
+
 trigger:
   branches:
     include:
-      - main  # Adjust to your default branch
-
-pool:
-  vmImage: ubuntu-latest
-#  name: <selfhostone>
-
-#system.debug: 'true'   
+      - present-3.0.0
 
 variables:
-  azureSubscription: 'edureka-rg-dev-SCN'  # serviceconnectiondetails
-  appName: 'rmbchatbotapi'  # Name of your Azure App Service
-  resourceGroup: 'edureka-rg-dev'  # Your resource group name
-  packagePath: '$(System.DefaultWorkingDirectory)/app.zip'  # Path to the zip 
-  
+  azureServiceConnectionId: 'rg-dev-SCN'
+  webAppName: 'python-backend-app-dev'
+  resourceGroupName: 'rg-dev'
+  vmImageName: 'dev-agent-pool'
+  projectRoot: $(System.DefaultWorkingDirectory)
 
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: BuildJob
+    pool:
+      name: $(vmImageName)
+    steps:
+    - script: |
+        python3.11 -m ensurepip --upgrade
+        python3.11 -m pip install --upgrade pip
+        python3.11 --version
+      displayName: 'Setup Python 3.11'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
+    - script: |
+        python3.11 -m venv antenv
+        source antenv/bin/activate
+        python --version
+        pip install --upgrade pip
+        # Add a specific version for setup or replace with a valid dependency if required
+        pip install setup==65.5.1
+        pip install -r requirements.txt
+      workingDirectory: $(projectRoot)
+      displayName: "Install requirements"
 
-- script: |
-    echo "Setting up Python environment..."
-    python -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-  displayName: 'Install Dependencies'
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(projectRoot)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
 
+    - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      displayName: 'Upload package'
+      artifact: drop
 
+- stage: Deploy
+  displayName: 'Deploy Web App'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: DeploymentJob
+    pool:
+      name: $(vmImageName)
+    steps:
+    - download: current
+      artifact: drop
+      displayName: 'Download Artifacts'
 
-- script: |
-    echo "Packaging Application..."
-    zip -r app.zip .  # Zip the entire application
-  displayName: 'Package Application'
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(Pipeline.Workspace)'
-    publishLocation: 'pipeline'
+    - task: AzureWebApp@1
+      displayName: 'Deploy Azure Web App : $(webAppName)'
+      inputs:
+        azureSubscription: $(azureServiceConnectionId)
+        appName: $(webAppName)
+        resourceGroupName: $(resourceGroupName)
+        package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+        deploymentMethod: 'zipDeploy'
+        takeAppOfflineFlag: true
 
-- task: AzureWebApp@1
-  inputs:
-    azureSubscription: '$(azureSubscription)'
-    appType: 'webAppLinux'
-    appName: '$(appName)'
-    package: '$(packagePath)'  # Path to the zipped application
-  displayName: 'Deploy to Azure App Service'
+    - task: AzureAppServiceManage@0
+      inputs:
+        azureSubscription: $(azureServiceConnectionId)
+        Action: 'Restart Azure App Service'
+        WebAppName: $(webAppName)
